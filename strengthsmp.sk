@@ -90,6 +90,12 @@ on death of player:
             send "&6You are already at Max Base Strength! The extra point materialized as a physical shard." to {_killer}
 
 
+    if {shards::%victim's uuid%} <= 0:
+        send "&5&lStrength &7» &cNo shard gained; &e%victim% &cis already at the lowest limit!" to attacker
+        stop
+
+
+
 
 # this is where the orange dye becomes the strength shrad
 
