@@ -1,0 +1,140 @@
+
+#
+# made by dokaEBK on discord :D
+#
+
+
+options:
+
+    # normal stat is 1.0 attack damage, basically the damage from a punch
+
+    min_attack_damage: 1.0
+
+    max_attack_damage: 5.0
+
+    
+
+    # the shard info
+
+    shard_item: orange dye named "&6&lStrength Shard" with lore "&7Right-click to permanently consume", "&7and gain &c+1.0 Generic Attack Damage&7.", "" and "&e&lTRADABLE ITEM"
+
+
+
+on load:
+
+    # this is the crafting recipe
+
+    register new shaped recipe for {@shard_item} using golden apple, netherite ingot, golden apple, netherite ingot, nether star, netherite ingot, golden apple, netherite ingot and golden apple with id "strength_shard_recipe"
+
+
+
+# data guidelines (dont touch)
+
+on join:
+
+    if {attr_strength::%player's uuid%} is not set:
+
+        set {attr_strength::%player's uuid%} to player's attack damage attribute
+
+    else:
+
+        # apply saved stats on login to stop any attribute reset glithces or bullshit like that
+
+        set player's attack damage attribute to {attr_strength::%player's uuid%}
+
+
+# combat shit
+
+on death of player:
+
+    set {_victim} to victim
+
+    
+
+    # vict loses 1 atk dmg attribute point
+
+    if {attr_strength::%{_victim}'s uuid%} > {@min_attack_damage}:
+
+        subtract 1.0 from {attr_strength::%{_victim}'s uuid%}
+
+        set {_victim}'s attack damage attribute to {attr_strength::%{_victim}'s uuid%}
+
+        send "&cYou died and lost -1 Attack Damage! Current Base: &e%{attr_strength::%{_victim}'s uuid%}%" to {_victim}
+
+    else:
+
+        send "&cYou died, but your strength is already at the lowest minimum baseline." to {_victim}
+
+
+
+    # killer gains 1 atk dmg attribute point
+
+    if attacker is a player:
+
+        set {_killer} to attacker
+
+        if {attr_strength::%{_killer}'s uuid%} < {@max_attack_damage}:
+
+            add 1.0 to {attr_strength::%{_killer}'s uuid%}
+
+            set {_killer}'s attack damage attribute to {attr_strength::%{_killer}'s uuid%}
+
+            send "&aYou gained +1 strength for getting a kill! Current Base: &e%{attr_strength::%{_killer}'s uuid%}%" to {_killer}
+
+        else:
+
+            # if their strength is maxed it drops the shard on the floor
+
+            drop {@shard_item} at {_victim}'s location
+
+            send "&6You are already at Max Base Strength! The extra point materialized as a physical shard." to {_killer}
+
+
+
+# this is where the orange dye becomes the strength shrad
+
+on right click with orange dye:
+
+    if name of tool is "&6&lStrength Shard":
+
+        cancel event
+
+        if {attr_strength::%player's uuid%} < {@max_attack_damage}:
+
+            remove 1 of tool from player's inventory
+
+            add 1.0 to {attr_strength::%player's uuid%}
+
+            set player's attack damage attribute to {attr_strength::%player's uuid%}
+
+            
+
+            play sound "entity.player.levelup" with volume 1 and pitch 1.2 to player
+
+            send "&aYou consumed a Strength Shard! Your base attack damage is now &e%{attr_strength::%player's uuid%}%&a." to player
+
+        else:
+
+            send "&cYou have already reached the maximum physical limit of base attribute strength!" to player
+
+
+command /withdraw [<integer>]:
+    trigger:
+        if arg 1 is not set:
+            send "&cUsage: /withdraw <amount>" to player
+            stop
+            
+        set {_amt} to arg 1
+        if {_amt} > 0:
+            set {_current} to {attr_strength::%player's uuid%}
+            # maths for if they are at minimum strength n shit
+            if ({_current} - {_amt}) >= {@min_attack_damage}:
+                subtract {_amt} from {attr_strength::%player's uuid%}
+                set player's attack damage attribute to {attr_strength::%player's uuid%}
+                
+                give {_amt} of {@shard_item} to player
+                send "&aSuccessfully withdrew &e%{_amt}% &aStrength into physical shards!" to player
+            else:
+                send "&cYou don't have enough spare Strength above the minimum baseline ({@min_attack_damage}) to withdraw that amount." to player
+        else:
+            send "&cPlease specify a valid number greater than 0." to player
